@@ -1,0 +1,51 @@
+Conversion between Tursi and JFLAP turing machine formats
+
+S. Hidaka (hidaka@hosei.ac.jp)
+
+Background:
+
+JFLAP does not have automatic animation capability while
+Tursi is not equipped with state transition diagram editor.
+With this converter, Tursi file (*.tm) can be converted
+to JFLAP (*.jff) and vice versa. For example, you can
+graphically build a turing machine using JFLAP and 
+generate Tursi file to animate.
+Tursi can generate state transition diagram, but it
+is just a vector image file without association with
+a simulator. By converting to JFLAP, stepwise execution
+is possible on state transition diagrams.
+lexer/parser/syntax/interpreter configuration is
+is partially due to Sumii [1].
+
+Tursi:
+  "A Turing Machine Simulator"
+ http://ais.informatik.uni-freiburg.de/tursi/index.html
+
+JFLAP (Version 7)
+  "software for experimenting with formal languages topics"
+  http://www.jflap.org/
+  
+XML-Light:
+  minimal XML parser & printer for OCaml
+  http://tech.motion-twin.com/xmllight.html
+  used to parse and print JFLAP XML files.
+
+How to use:
+1. Build: 
+   Use OCaml to compile using 'make all'
+2. Invoke:
+   Tursi to Tursi (replacing input tape contents)
+   ./interpret -write "tape contents" < input.tm > output.tm
+
+   Tursi to JFLAP
+   ./interpret < input.tm > output.jff
+   open output.jff with JFLAP and layout state transition diagram
+
+   JFLAP to Tursi
+   ./interpret -j2t < input.jff > output.tm
+
+
+References
+[1] 住井 英二郎, 独自のプログラミング言語を開発してみよう（その1）, （その2）
+ 日経ソフトウエア連載 「数理科学的バグ撲滅方法論のすすめ」, 2017
+ http://itpro.nikkeibp.co.jp/article/COLUMN/20060915/248230/
