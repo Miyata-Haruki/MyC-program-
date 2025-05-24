@@ -1,4 +1,4 @@
-# MyC-program-
+# MyC-program <img src="https://img.shields.io/badge/-Ocaml-FFFFFF.svg?logo=ocaml&style=flat-square">
 ## 1. 本プロジェクトの目的
 本プロジェクトでは、関数型言語OCaml を用いたMyC 言語の処理系の部分的実装を行う。処理系は授業内で配布
 されたサンプルを用いて拡張を進める。サンプル配布時の処理系では、MyC プログラムによる演算で、Int 型す
