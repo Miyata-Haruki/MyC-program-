@@ -9,53 +9,55 @@
 ログラムの一部に名前をつけ、サブルーチンとして再利用できるようにした。これにより、MyC 言語を関数型言
 語として扱えるようになった。
 ``` ocaml
+図 1: ユーザー定義関数
 1 {
-2 define function getter(x) {
-3 print x;
-4 };
-5 n = 10;
-6 getter(n);
+2  define function getter(x) {
+3    print x;
+4  };
+5  n = 10;
+6  getter(n);
 7 }
 ```
 Float 型の実装に伴い、MyC プログラムにおける変数ないし値の変数型の判定が必要になった。実装当初は、MyC
 プログラムを文として評価して変数型の判定を行っていた。加算演算における変数型判定のプログラムを以下に
-示す。簡単のため、パターンマッチにおける式部は省略する。
+図2に示す。簡単のため、パターンマッチにおける式部は省略する。
 ``` ocaml
+図 2: Add 演算における変数型判定の処理部
 1 | Add(x, y, z) ->
-2 (match y, z with
-3 | Int m, Int n ->
-4 | Float m, Float n ->
-5 | Int m, Float n ->
-6 | Float m, Int n ->
-7 | Var m, Int n ->
-8 | Int m, Var n ->
-9 | Var m, Float n ->
-10 | Float m, Var n ->
-11 | Var m, Var n ->
+2     (match y, z with
+3      | Int m, Int n ->
+4      | Float m, Float n ->
+5      | Int m, Float n ->
+6      | Float m, Int n ->
+7      | Var m, Int n ->
+8      | Int m, Var n ->
+9      | Var m, Float n ->
+10     | Float m, Var n ->
+11     | Var m, Var n ->
 ```
 Float 型の実装による整数型の判定を行うプログラムでは、追加した減算、乗算、除算、剰余演算に対して図2 に
 示した組み合わせのパターンマッチを行っていたが、プログラムが冗長になってしまい、可読性が損なわれてい
 た。そこで、図3 に示すプログラムに変更し、整数型判定を式によって行った。
 ``` ocaml
-Listing 3: Add 演算における変数型判定の処理部改良後
+図 3: Add 演算における変数型判定の処理部改良後
 1 | Add(x, y, z) ->
-2 let type_value v =
-3 match v with
-4 | Int n -> float_of_int n
-5 | Float n -> n
-6 | Var n ->
-7 match Hashtbl.find table n with
-8 | Int m -> float_of_int m
-9 | Float m -> m
-10 | _ -> failwith "Type error in Add"
-11 in
-12 let value_of_y = type_value y in
-13 let value_of_z = type_value z in
-14 let culc = value_of_y +. value_of_z in
-15 if ( culc -. floor culc = 0.0 ) then
-16 Hashtbl.replace table x (Int(int_of_float culc))
-17 else
-18 Hashtbl.replace table x (Float culc)
+2     let type_value v =
+3       match v with
+4         | Int n -> float_of_int n
+5         | Float n -> n
+6         | Var n ->
+7           match Hashtbl.find table n with
+8             | Int m -> float_of_int m
+9             | Float m -> m
+10            | _ -> failwith "Type error in Add"
+11     in
+12     let value_of_y = type_value y in
+13     let value_of_z = type_value z in
+14     let culc = value_of_y +. value_of_z in
+15     if ( culc -. floor culc = 0.0 ) then
+16       Hashtbl.replace table x (Int(int_of_float culc))
+17     else
+18       Hashtbl.replace table x (Float culc)
 ```
 
 ## 2. 動作環境
@@ -95,9 +97,9 @@ let float = digit+ ’.’ digit+
 type var = string
 (* データ型を表す *)
 type value =
-| Int of int
-| Float of float
-| Var of var
+  | Int of int
+  | Float of float
+  | Var of var
 ```
 さらに、構文生成器 (parser.mly) に以下のトークンを記述する。  
 ```ocamlx
@@ -127,14 +129,14 @@ value ルールによって、整数定数、浮動小数点定数、変数を�
 ```ocmal
 statement:
 | VAR EQUAL CONST_FLOAT
-{ Const($1, Float($3)) }
+    { Const($1, Float($3)) }
 ```
 変数への値の代入文における右辺の変数部:’VAR’ を’value’ に置き換える。また、while 文内の変数部についても同様に置き換える。も MyC プログラム内で Float 型の変数を扱うことができる。以下に ADD演算の場合の変更例を示す。”Old”は変更前、”New”は変更後を表す。
 ```ocmal
 /*Old*/
-| VAR EQUAL VAR PLUS VAR
+    | VAR EQUAL VAR PLUS VAR
 /*New*/
-| VAR EQUAL value PLUS value
+    | VAR EQUAL value PLUS value
 ```
 ここで、現段階では Float 型の変数を用いた演算は行うことができない。そこで、次章の”1.2 演算子の追加”では、追加した演算子の説明とともに、演算における Float 型の実装の説明を行う。  
 ## 3.2 演算子の追加
@@ -144,25 +146,25 @@ Float 型の実装とデータ型 value の追加により、MyC プログラム
 ### 3.1.1 加算
 以下に、加算 (Add 文) における変数型判定を行うプログラムを以下に示す。
 ```ocaml
-Listing 4: Add 演算における変数型判定の処理部
+図 4: Add 演算における変数型判定の処理部
 1 | Add(x, y, z) ->
-2 let type_value v =
-3 match v with
-4 | Int n -> float_of_int n
-5 | Float n -> n
-6 | Var n ->
-7 match Hashtbl.find table n with
-8 | Int m -> float_of_int m
-9 | Float m -> m
-10 | _ -> failwith "Type error in Add"
-11 in
-12 let value_of_y = type_value y in
-13 let value_of_z = type_value z in
-14 let culc = value_of_y +. value_of_z in
-15 if ( culc -. floor culc = 0.0 ) then
-16 Hashtbl.replace table x (Int(int_of_float culc))
-17 else
-18 Hashtbl.replace table x (Float culc)
+2     let type_value v =
+3       match v with
+4         | Int n -> float_of_int n
+5         | Float n -> n
+6         | Var n ->
+7           match Hashtbl.find table n with
+8             | Int m -> float_of_int m
+9             | Float m -> m
+10            | _ -> failwith "Type error in Add"
+11     in
+12     let value_of_y = type_value y in
+13     let value_of_z = type_value z in
+14     let culc = value_of_y +. value_of_z in
+15     if ( culc -. floor culc = 0.0 ) then
+16       Hashtbl.replace table x (Int(int_of_float culc))
+17     else
+18       Hashtbl.replace table x (Float culc)
 ```
 Add 文におけるパターンマッチ式では、引数を value 型の変数 v とする関数 type value を宣言する。関数内では、仮引数 v に対してパターンマッチを行い、value 型の変数のデータ型を全て Float 型に変換している。例えば、Add(x, y, z) は x = y + z という形の式を表しており、まず右辺の項 y と項 z を Float型に変換する。Float 型に変換された値はそれぞれ、変数 value of y,value of z に格納される。次に、変数 culc に ﬂoat 型の変数 value of y と value of z の加算結果を格納し、次式 culc -. ﬂoor culc = 0.0 により、演算結果の Int 型または Float 型の判定を行っている。
 
@@ -171,52 +173,52 @@ Add 文におけるパターンマッチ式では、引数を value 型の変数
 let culc = value_of_y -. value_of_z
 4 の 14 行目、変数 culc について、変数 value of y と変数 value of z 同士の演算子’+.’ を’-.’ に変更する。
 以下に、減算における変数型判定を行うプログラムを図 5 に示す。
-Listing 5: Add 演算における変数型判定の処理部
+図 5: Add 演算における変数型判定の処理部
 ```ocaml
 1 | Sub(x, y, z) ->
-2 let type_value v =
-3 match v with
-4 | Int n -> float_of_int n
-5 | Float n -> n
-6 | Var n ->
-7 match Hashtbl.find table n with
-8 | Int m -> float_of_int m
-9 | Float m -> m
-10 | _ -> failwith "Type error in Sub"
-11 in
-12 let value_of_y = type_value y in
-13 let value_of_z = type_value z in
-14 let culc = value_of_y -. value_of_z in
-15 if ( culc -. floor culc = 0.0 ) then
-16 Hashtbl.replace table x (Int(int_of_float culc))
-17 else
-18 Hashtbl.replace table x (Float culc)
+2     let type_value v =
+3       match v with
+4         | Int n -> float_of_int n
+5         | Float n -> n
+6         | Var n ->
+7           match Hashtbl.find table n with
+8             | Int m -> float_of_int m
+9             | Float m -> m
+10            | _ -> failwith "Type error in Sub"
+11     in
+12     let value_of_y = type_value y in
+13     let value_of_z = type_value z in
+14     let culc = value_of_y -. value_of_z in
+15     if ( culc -. floor culc = 0.0 ) then
+16       Hashtbl.replace table x (Int(int_of_float culc))
+17     else
+18       Hashtbl.replace table x (Float culc)
 ```
 ### 3.2.3 除算
 除算を処理するプログラムを図 6 に示す。
-Listing 6: Sub 演算における変数型判定の処理部
+図 6: Sub 演算における変数型判定の処理部
 ```ocmal
 1 | Div(x, y, z) ->
-2 let type_value v =
-3 match v with
-4 | Int n -> float_of_int n
-5 | Float n -> n
-6 | Var n ->
-7 match Hashtbl.find table n with
-8 | Int m -> float_of_int m
-9 | Float m -> m
-10 | _ -> failwith "Type error in Div"
-11 in
-12 let value_of_y = type_value y in
-13 let value_of_z = type_value z in
-14 if value_of_z = 0.0 then
-15 failwith "Division by zero"
-16 else
-17 let culc = value_of_y /. value_of_z in
-18 if ( culc -. floor culc = 0.0 ) then
-19 Hashtbl.replace table x (Int(int_of_float culc))
-20 else
-21 Hashtbl.replace table x (Float culc)
+2     let type_value v =
+3       match v with
+4         | Int n -> float_of_int n
+5         | Float n -> n
+6         | Var n ->
+7           match Hashtbl.find table n with
+8             | Int m -> float_of_int m
+9             | Float m -> m
+10            | _ -> failwith "Type error in Div"
+11     in
+12     let value_of_y = type_value y in
+13     let value_of_z = type_value z in
+14     if value_of_z = 0.0 then
+15       failwith "Division by zero"
+16     else
+17       let culc = value_of_y /. value_of_z in
+18       if ( culc -. floor culc = 0.0 ) then
+19         Hashtbl.replace table x (Int(int_of_float culc))
+20       else
+21         Hashtbl.replace table x (Float culc)
 ```
 除算についても同様に処理部を記述するが、非除数に対して除数が 0 の場合は不定形のため、図 6 の14∼15 行目に示す、エラー文を追加する。
 ```ocmal
@@ -231,78 +233,78 @@ if value_of_z = 0.0 then
 let culc = value_of_y *. value_of_z
 ```
 以下図 7 に、乗算における変数型判定を行うプログラムを示す。
-Listing 7: Mul 演算における変数型判定の処理部
+図 7: Mul 演算における変数型判定の処理部
 ```ocmal
 1 | Mul(x, y, z) ->
-2 let type_value v =
-3 match v with
-4 | Int n -> float_of_int n
-5 | Float n -> n
-6 | Var n ->
-7 match Hashtbl.find table n with
-8 | Int m -> float_of_int m
-9 | Float m -> m
-10 | _ -> failwith "Type error in Mul"
-11 in
-12 let value_of_y = type_value y in
-13 let value_of_z = type_value z in
-14 let culc = value_of_y *. value_of_z in
-15 if ( culc -. floor culc = 0.0 ) then
-16 Hashtbl.replace table x (Int(int_of_float culc))
-17 else
-18 Hashtbl.replace table x (Float culc)
+2     let type_value v =
+3       match v with
+4         | Int n -> float_of_int n
+5         | Float n -> n
+6         | Var n ->
+7           match Hashtbl.find table n with
+8             | Int m -> float_of_int m
+9             | Float m -> m
+10            | _ -> failwith "Type error in Mul"
+11    in
+12    let value_of_y = type_value y in
+13    let value_of_z = type_value z in
+14    let culc = value_of_y *. value_of_z in
+15    if ( culc -. floor culc = 0.0 ) then
+16      Hashtbl.replace table x (Int(int_of_float culc))
+17    else
+18      Hashtbl.replace table x (Float culc)
 ```
 
 ### 3.2.5 剰余演算
 以下の図 8 に剰余演算の変数型判定を行うプログラムを示す。エラー文は簡単のため、”エラー文”で
 示す。
-Listing 8: Div 演算における変数型判定の処理部
+図 8: Div 演算における変数型判定の処理部
 1 let type_value v =
-2 match v with
-3 | Int n -> n
-4 | Float n -> エラー文
-5 | Var n ->
-6 match Hashtbl.find table n with
-7 | Int m -> m
-8 | Float m -> エラー文
-9 | _ -> failwith "Type error in Mod"
-10 in
-11 let value_of_y = type_value y in
-12 let value_of_z = type_value z in
-13 let culc = value_of_y mod value_of_z in
-14 Hashtbl.replace table x (Int(culc))
+2     match v with
+3       | Int n -> n
+4       | Float n -> エラー文
+5       | Var n ->
+6         match Hashtbl.find table n with
+7           | Int m -> m
+8           | Float m -> エラー文
+9           | _ -> failwith "Type error in Mod"
+10    in
+11    let value_of_y = type_value y in
+12    let value_of_z = type_value z in
+13    let culc = value_of_y mod value_of_z in
+14      Hashtbl.replace table x (Int(culc))
 図 8 より、剰余演算において Float 型は定義できないため、エラーを発生させている。
 
 ## 3.3 ユーザ定義関数の追加
 ユーザー定義関数（サブルーチン）の追加を行った。MyC 言語でユーザー定義関数を実現するには、処理系において、関数の定義と関数の呼び出しが必要になった。まず、字句解析生成系 (lexer.mll) において、rule 構文に以下の予約語を追加する。
 ```ocaml
 | "define"
-{ DEFINE }
+    { DEFINE }
 | "function"
-{ FUNCTION }
+    { FUNCTION }
 ```
 構文解析器 (perser.mly) に関数の仮引数、関数呼び出し時の実引数を解析する規則を追加する。以下にx示す。
 ```ocaml
 1 /* 仮引数 (formal argment) */
 2 formal_arg:
-3 | VAR { [$1] }
-4 | VAR COMMA formal_arg { $1 :: $3 }
-5 | { [] }関数呼び出し時の引数リスト
+3   | VAR { [$1] }
+4   | VAR COMMA formal_arg { $1 :: $3 }
+5   | { [] }関数呼び出し時の引数リスト
 6
 7 /**/実引数
 8 /*(actual argment)*/
 9 actual_arg:
-10 | VAR { [$1] }
-11 | VAR COMMA actual_arg { $1 :: $3 }
-12 | { [] }
+10  | VAR { [$1] }
+11  | VAR COMMA actual_arg { $1 :: $3 }
+12  | { [] }
 ```
 formal arg は仮引数、actual arg は関数呼び出し時の実引数を解析する規則である。
 ```ocaml
 1 | DEFINE FUNCTION VAR LPAREN formal_arg RPAREN LBRACE statement_list RBRACE
-2 { Define($3, $5, $8) }
+2     { Define($3, $5, $8) }
 3 | VAR LPAREN actual_arg RPAREN
-4 /* 関数呼び出し */
-5 { Call($1,$3) }
+4     /* 関数呼び出し */
+5     { Call($1,$3) }
 ```
 関数定義では、「def f() 文 1; 文 2; … ;」という形の文を解析する。構文木 (syntax.ml) に、関数定義及び関数呼び出しの木構造を表すため、文を表すデータ型 statement に
 ```ocmal
@@ -312,32 +314,32 @@ formal arg は仮引数、actual arg は関数呼び出し時の実引数を解�
 を追加する。関数定義において、関数名は VAR 型、仮引数は VAR 型のリスト、関数本体は statementlist 型にする。MyC プログラムを解釈実行する解釈器 (interpret.ml) に図 9 に示す。
 
 ```ocaml
-Listing 9: ユーザー定義関数を解釈するプログラム
+図 9: ユーザー定義関数を解釈するプログラム
 1 (* 関数名をキーにして、引数と関数本体を格納 *)
 2 let table:(var, value) Hashtbl.t = Hashtbl.create 10
 3 let function_table:(var,(var list * statement list)) Hashtbl.t = Hashtbl.create 50
 4
 5 let rec interpret (s:statement) = match s with
-6 (* 関数定義 *)
-7 | Define(name,args,body) ->
-8 Hashtbl.add function_table name (args, body)
-9 (* 関数呼び出し *)
-10 | Call(name, params) ->
-11 let (args, body) = Hashtbl.find function_table name in
-12 let local_table = Hashtbl.copy table in
-13 List.iter2 (fun arg param ->
-14 Hashtbl.replace local_table arg (Hashtbl.find table param)) args params;
-15 let statements = body in
-16 List.iter (fun stat -> update stat local_table table) statements;
-17 | _ -> ()
+6     (* 関数定義 *)
+7     | Define(name,args,body) ->
+8     Hashtbl.add function_table name (args, body)
+9     (* 関数呼び出し *)
+10     | Call(name, params) ->
+11         let (args, body) = Hashtbl.find function_table name in
+12         let local_table = Hashtbl.copy table in
+13         List.iter2 (fun arg param ->
+14             Hashtbl.replace local_table arg (Hashtbl.find table param)) args params;
+15         let statements = body in
+16         List.iter (fun stat -> update stat local_table table) statements;
+17     | _ -> ()
 18 (* ハッシュテーブルの更新と実行 *)
 19 and update stat env_table table =
-20 let old_table = Hashtbl.copy table in
-21 Hashtbl.clear table;
-22 Hashtbl.iter (fun name formal -> Hashtbl.replace table name formal) env_table;
-23 interpret stat;
-24 Hashtbl.clear table;
-25 Hashtbl.iter (fun name formal -> Hashtbl.replace table name formal) old_table
+20     let old_table = Hashtbl.copy table in
+21     Hashtbl.clear table;
+22     Hashtbl.iter (fun name formal -> Hashtbl.replace table name formal) env_table;
+23     interpret stat;
+24     Hashtbl.clear table;
+25     Hashtbl.iter (fun name formal -> Hashtbl.replace table name formal) old_table
 ```
 
 ### 3.3.1 関数定義
@@ -353,7 +355,7 @@ let function_table:(var,(var list * statement list)) Hashtbl.t = Hashtbl.create 
 数本体を追加する。
 ```ocmal
 | Define(name,args,body) ->
-  Hashtbl.add function_table name (args, body)
+    Hashtbl.add function_table name (args, body)
 ```
 ### 3.3.2 関数呼び出し
 関数呼び出しでは、まず変数 args と変数 body に、関数名 name をキーとして fuction table から値で
@@ -370,7 +372,7 @@ List.iter2 を用いて、仮引数の変数と実引数が格納する値の対
 で、変数 params には関数の実引数がリストとして格納されている。
 ```ocaml
 List.iter2 (fun arg param ->
-Hashtbl.replace local_table arg (Hashtbl.find table param)) args params;
+  Hashtbl.replace local_table arg (Hashtbl.find table param)) args params;
 ```
 関数本体 body を変数 statements に格納する。ここで、関数本体 statements、local table、table を引数
 として、ハッシュテーブルの更新と関数本体の実行を行う関数 update を実行する。
@@ -384,14 +386,14 @@ List.iter (fun stat -> update stat local_table table) statements;
 を空にし、old table を用いて元の状態に復元する。
 
 ```ocaml
-Listing 10: 関数 update
+図 10: 関数 update
 1 and update stat env_table table =
-2 let old_table = Hashtbl.copy table in (* 現在のハッシュテーブルをコピー *)
-3 Hashtbl.clear table; (* テーブルを新しい環境に切り替え *)
-4 Hashtbl.iter (fun name formal -> Hashtbl.replace table name formal) env_table;
-5 interpret stat; (* 関数の本体を解釈 *)
-6 Hashtbl.clear table; (* 処理後に元の状態を復元 *)
-7 Hashtbl.iter (fun name formal -> Hashtbl.replace table name formal) old_table
+2     let old_table = Hashtbl.copy table in (* 現在のハッシュテーブルをコピー *)
+3     Hashtbl.clear table; (* テーブルを新しい環境に切り替え *)
+4     Hashtbl.iter (fun name formal -> Hashtbl.replace table name formal) env_table;
+5     interpret stat; (* 関数の本体を解釈 *)
+6     Hashtbl.clear table; (* 処理後に元の状態を復元 *)
+7     Hashtbl.iter (fun name formal -> Hashtbl.replace table name formal) old_table
 ```
 
 ## 4 評価
@@ -401,7 +403,7 @@ Listing 10: 関数 update
 ### 4.1 加算演算子の検証
 以下、図 11 に加算演算子の検証を行う Myc プログラムを示す。
 ```ocaml
-Listing 11: 加算演算子の検証プログラム
+図 11: 加算演算子の検証プログラム
 1 int = 1;
 2 float = 1.0;
 3
@@ -420,7 +422,7 @@ Listing 11: 加算演算子の検証プログラム
 ### 4.2 減算演算子の検証
 以下、図 12 に減算演算子の検証を行う Myc プログラムを示す。
 ```ocaml
-Listing 12: 減算演算子の検証プログラム
+図 12: 減算演算子の検証プログラム
 1 int = 10;
 2 float = 10.0;
 3 sub = int - float;
@@ -437,7 +439,7 @@ sub の値は、10 - 9.9 の計算により、ﬂoat 型の値 ”0.100000” �
 ### 4.3 除算演算子の検証
 以下、図 13 に除算演算子の検証を行う Myc プログラムを示す。
 ```ocaml
-Listing 13: 除算演算子の検証プログラム
+図 13: 除算演算子の検証プログラム
 1 int = 1;
 2 float = 1.0;
 3 div = float / 2;
@@ -451,7 +453,7 @@ Listing 13: 除算演算子の検証プログラム
 ### 4.4 乗算演算子の検証
 以下、図 14 に乗算演算子の検証を行う Myc プログラムを示す。
 ```ocaml
-Listing 14: 乗算演算子の検証プログラム
+図 14: 乗算演算子の検証プログラム
 1 int = 1;
 2 float = 1.0;
 3 mul = int * float;
@@ -466,7 +468,7 @@ Listing 14: 乗算演算子の検証プログラム
 ### 4.5 剰余演算子の検証
 以下、図 15 に剰余演算子の検証を行う Myc プログラムを示す。
 ```ocaml
-Listing 15: 剰余演算子の検証プログラム
+図 15: 剰余演算子の検証プログラム
 1 a = 5;
 2 b = 3;
 3 mod = a % b;
@@ -487,23 +489,23 @@ int” が出力されていることがわかる。これは、Myc 言語のコ
 定義関数の検証を行う Myc プログラムであり、10 から 0 までのカウントダウンを行うプログラムであ
 る。myprint 関数は、引数 x を組み込み関数 print により出力する関数である。図 17 に出力結果も示す。
 ```ocmal
-Listing 16: ユーザ定義関数の検証プログラム
+図 16: ユーザ定義関数の検証プログラム
 1 {
-2 define function myprint(x){
-3 print x;
-4 };
-5 fin = -1;
-6 minus_one = -1;
-7 sum = 0;
-8 n = 10;
-9 while (n > fin) {
-10 myprint(n);
-11 n = n + minus_one;
-12 };
+2   define function myprint(x){
+3     print x;
+4   };
+5   fin = -1;
+6   minus_one = -1;
+7   sum = 0;
+8   n = 10;
+9   while (n > fin) {
+10    myprint(n);
+11    n = n + minus_one;
+12  };
 13 }
 ```
 ```ocaml
-Listing 17: 図 16 の出力結果
+図 17: 図 16 の出力結果
 10
 9
 8
