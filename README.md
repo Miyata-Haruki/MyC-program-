@@ -173,8 +173,8 @@ Add 文におけるパターンマッチ式では、引数を value 型の変数
 let culc = value_of_y -. value_of_z
 4 の 14 行目、変数 culc について、変数 value of y と変数 value of z 同士の演算子’+.’ を’-.’ に変更する。
 以下に、減算における変数型判定を行うプログラムを図 5 に示す。
-図 5: Add 演算における変数型判定の処理部
 ```ocaml
+図 5: Add 演算における変数型判定の処理部
 1 | Sub(x, y, z) ->
 2     let type_value v =
 3       match v with
@@ -196,8 +196,9 @@ let culc = value_of_y -. value_of_z
 ```
 ### 3.2.3 除算
 除算を処理するプログラムを図 6 に示す。
-図 6: Sub 演算における変数型判定の処理部
+
 ```ocaml
+図 6: Sub 演算における変数型判定の処理部
 1 | Div(x, y, z) ->
 2     let type_value v =
 3       match v with
@@ -233,8 +234,9 @@ if value_of_z = 0.0 then
 let culc = value_of_y *. value_of_z
 ```
 以下図 7 に、乗算における変数型判定を行うプログラムを示す。
-図 7: Mul 演算における変数型判定の処理部
+
 ```ocaml
+図 7: Mul 演算における変数型判定の処理部
 1 | Mul(x, y, z) ->
 2     let type_value v =
 3       match v with
