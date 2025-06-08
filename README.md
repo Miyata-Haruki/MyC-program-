@@ -102,7 +102,7 @@ type value =
   | Var of var
 ```
 さらに、構文生成器 (parser.mly) に以下のトークンを記述する。  
-```ocamlx
+```ocaml
 %token <string> VAR /* 変数名 */
 %token <int> CONST_INT /* 整数定数 */
 %token <float> CONST_FLOAT
@@ -197,7 +197,7 @@ let culc = value_of_y -. value_of_z
 ### 3.2.3 除算
 除算を処理するプログラムを図 6 に示す。
 図 6: Sub 演算における変数型判定の処理部
-```ocmal
+```ocaml
 1 | Div(x, y, z) ->
 2     let type_value v =
 3       match v with
@@ -221,7 +221,7 @@ let culc = value_of_y -. value_of_z
 21         Hashtbl.replace table x (Float culc)
 ```
 除算についても同様に処理部を記述するが、非除数に対して除数が 0 の場合は不定形のため、図 6 の14∼15 行目に示す、エラー文を追加する。
-```ocmal
+```ocaml
 if value_of_z = 0.0 then
   failwith "Division by zero"
 ```
@@ -234,7 +234,7 @@ let culc = value_of_y *. value_of_z
 ```
 以下図 7 に、乗算における変数型判定を行うプログラムを示す。
 図 7: Mul 演算における変数型判定の処理部
-```ocmal
+```ocaml
 1 | Mul(x, y, z) ->
 2     let type_value v =
 3       match v with
@@ -258,6 +258,7 @@ let culc = value_of_y *. value_of_z
 ### 3.2.5 剰余演算
 以下の図 8 に剰余演算の変数型判定を行うプログラムを示す。エラー文は簡単のため、”エラー文”で
 示す。
+```ocaml
 図 8: Div 演算における変数型判定の処理部
 1 let type_value v =
 2     match v with
@@ -273,6 +274,7 @@ let culc = value_of_y *. value_of_z
 12    let value_of_z = type_value z in
 13    let culc = value_of_y mod value_of_z in
 14      Hashtbl.replace table x (Int(culc))
+```
 図 8 より、剰余演算において Float 型は定義できないため、エラーを発生させている。
 
 ## 3.3 ユーザ定義関数の追加
@@ -307,7 +309,7 @@ formal arg は仮引数、actual arg は関数呼び出し時の実引数を解�
 5     { Call($1,$3) }
 ```
 関数定義では、「def f() 文 1; 文 2; … ;」という形の文を解析する。構文木 (syntax.ml) に、関数定義及び関数呼び出しの木構造を表すため、文を表すデータ型 statement に
-```ocmal
+```ocaml
 1 | Define of var * var list * statement list
 2 | Call of var * var list
 ```
@@ -353,7 +355,7 @@ let function_table:(var,(var list * statement list)) Hashtbl.t = Hashtbl.create 
 ```
 関数呼び出しでは、関数を保存するハッシュテーブル”function table” に、関数名をキーとし引数と関
 数本体を追加する。
-```ocmal
+```ocaml
 | Define(name,args,body) ->
     Hashtbl.add function_table name (args, body)
 ```
@@ -488,7 +490,7 @@ int” が出力されていることがわかる。これは、Myc 言語のコ
 ユーザ定義関数の検証を行う。検証するプログラムは、function.myc に示す。以下、図 16 はユーザ
 定義関数の検証を行う Myc プログラムであり、10 から 0 までのカウントダウンを行うプログラムであ
 る。myprint 関数は、引数 x を組み込み関数 print により出力する関数である。図 17 に出力結果も示す。
-```ocmal
+```ocaml
 図 16: ユーザ定義関数の検証プログラム
 1 {
 2   define function myprint(x){
